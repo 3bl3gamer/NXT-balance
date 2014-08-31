@@ -6,4 +6,6 @@ NXT-balance
 
 ![С обеих сторон](https://raw.githubusercontent.com/3bl3gamer/NXT-balance/master/media_v0.1/all.jpg)
 
-Или [видео](https://github.com/3bl3gamer/NXT-balance/raw/master/media_v0.1/rec_v0.1.mp4)
+Более-менее балансирует на двух колёсах.
+
+На [видео](https://github.com/3bl3gamer/NXT-balance/raw/master/media_v0.1/rec_v0.1.mp4) смотрится лучше.
