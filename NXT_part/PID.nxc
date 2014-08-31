@@ -1,0 +1,49 @@
+task main()
+{
+  int i=0;
+  float rotation=0;
+  long prev_time=CurrentTick();
+  float power = 0;
+  
+  for(;;)
+  {
+    Wait(1);
+    string msg;
+    char res=ReceiveMessage(0, true, msg);
+    NumOut(0, 8, res, DRAW_OPT_NORMAL);
+    if (res==64) continue;
+
+    int space_pos=Pos(" ", msg);
+    float gyro_deg_speed=StrToNum(SubStr(msg, 0, space_pos));
+    float accel_deg=StrToNum(SubStr(msg, space_pos+1, StrLen(msg)-space_pos-1));
+    accel_deg-=0.040;
+    
+    long current_time=CurrentTick();
+    int time_delta=current_time-prev_time;
+    prev_time=current_time;
+    
+    float A=0.99;
+    float rotation = A*(rotation+gyro_deg_speed*0.01) + (1-A)*accel_deg; //*time_delta*0.001
+    
+    float Kp=1.1;
+    float Kd=8;
+    power += 100*(Kp*(rotation+gyro_deg_speed*0.01) + Kd*gyro_deg_speed*0.01); //*time_delta*0.001;
+    if (power>100) power=100;
+    if (power<-100) power=-100;
+
+    NumOut(0, 0, i, DRAW_OPT_NORMAL);
+    NumOut(0, 8, res, DRAW_OPT_NORMAL);
+    TextOut(0, 16, "gyro: "+NumToStr(gyro_deg_speed)+" ", DRAW_OPT_NORMAL);
+    TextOut(0, 24, "accel: "+NumToStr(accel_deg)+" ", DRAW_OPT_NORMAL);
+    TextOut(0, 32, "td: "+NumToStr(time_delta)+" ", DRAW_OPT_NORMAL);
+    TextOut(0, 40, "rot: "+NumToStr(rotation)+" ", DRAW_OPT_NORMAL);
+    TextOut(0, 48, "power: "+NumToStr(power)+" ", DRAW_OPT_NORMAL);
+    
+    int tpower=-power;
+    //because 1-4% power is not enough to rotate wheel
+    if (tpower<0) tpower-=4;
+    if (tpower>0) tpower+=4;
+    OnRev(OUT_BC, tpower);
+    i++;
+  }
+}

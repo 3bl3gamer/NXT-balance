@@ -1,0 +1,110 @@
+<canvas id="canvas" width="768" height="512"></canvas>
+<div id="infoBox"></div>
+<script>
+function point_distance(x1,y1,x2,y2) {
+	return Math.sqrt((x2-x1)*(x2-x1)+
+					 (y2-y1)*(y2-y1));
+}
+
+
+function Engine() {
+	var xgravity=0, ygravity=0.5;
+	var max_point_numb = 512, point_numb = 0;
+	var xx,yy,rr,val,xspeed,yspeed;
+	
+	function initArrays() {
+		xx = new Float32Array(max_point_numb);
+		yy = new Float32Array(max_point_numb);
+		xspeed = new Float32Array(max_point_numb);
+		yspeed = new Float32Array(max_point_numb);
+	}
+	
+	function point_distance_id(id1,id2) {
+		var x1=xx[id1], y1=yy[id1];
+		var x2=xx[id2], y2=yy[id2];
+		return Math.sqrt((x2-x1)*(x2-x1)+
+		                 (y2-y1)*(y2-y1));
+	}
+	
+	function pointAdd(x,y) {
+		xx[point_numb] = x;
+		yy[point_numb] = y;
+		xspeed[point_numb] = 0;
+		yspeed[point_numb] = 0;
+		point_numb++;
+	}
+	
+	function springStep(w, h) {
+		xspeed[0] *= (1-Math.random()*0.3);
+		
+		for (var i=0; i<point_numb; i++) {
+			xx[i] += xspeed[i];
+			yy[i] += yspeed[i];
+			xspeed[i] += xgravity;
+			yspeed[i] += ygravity;
+			if (xx[i] < -0.1) {xx[i]=0; xspeed[i]=0;}
+			if (xx[i] > w+0.1) {xx[i]=w; xspeed[i]=0;}
+			if (yy[i] < -0.1) {yy[i]=0; yspeed[i]=0;}
+			if (yy[i] > h+0.1) {yy[i]=h; yspeed[i]=0;}
+		}
+		
+		var ii1, ii2, dis, dest_dis, cos, sin;
+		
+				ii1=0, ii2=1;
+				dis = point_distance_id(ii1,ii2);
+				if (dis==0) {dis+=0.001;}
+				cos=(xx[ii2]-xx[ii1])/dis;
+				sin=(yy[ii2]-yy[ii1])/dis;
+				dis=(256-dis+
+					cos*xspeed[ii1]+sin*yspeed[ii1]-
+					cos*xspeed[ii2]-sin*yspeed[ii2])/3;
+				xspeed[ii1]-=cos*dis;
+				yspeed[ii1]-=sin*dis;
+				xspeed[ii2]+=cos*dis;
+				yspeed[ii2]+=sin*dis;
+	}
+	
+	var dir_prev = 0;
+	var power = 0;
+	
+	function pid() {
+		dir_cur = Math.atan2(yy[1]-yy[0], xx[1]-xx[0]) + Math.PI/2 + 0.01-Math.random()*0.02;
+		dir_d = dir_cur-dir_prev;
+		setTimeout((function(dir_cur, dir_d){return function() {
+			power += (2*(dir_cur) + 15*dir_d)*1.2;
+		}})(dir_cur, dir_d), 32);
+		//if (power>0.5) power = 0.5;
+		//if (power<-0.5) power = -0.5;
+		xspeed[0] += power;
+		infoBox.innerHTML = dir_cur+"<br>"+power;
+		dir_prev = dir_cur;
+	}
+	
+	function draw(rc) {
+		for (i=0;i<point_numb;i++) {
+			rc.beginPath();
+			rc.arc(xx[i],yy[i],5,0,2*Math.PI,true);
+			rc.stroke();
+		}
+	}
+	
+	
+	this.pointAdd = pointAdd;
+	this.springStep = springStep;
+	this.draw = draw;
+	this.pid = pid;
+	
+	initArrays();
+}
+
+var e = new Engine();
+var rc = canvas.getContext("2d");
+e.pointAdd(canvas.width/2, canvas.height);
+e.pointAdd(canvas.width/2+20, canvas.height-256);
+setInterval(function() {
+	rc.clearRect(0, 0, canvas.width, canvas.height);
+	for (var i=0; i<4; i++) e.springStep(canvas.width, canvas.height);
+	e.pid();
+	e.draw(rc);
+}, 32);
+</script>

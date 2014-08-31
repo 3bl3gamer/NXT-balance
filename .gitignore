@@ -1,0 +1,6 @@
+Android_part/bin
+Android_part/gen
+Android_part/proguard-project.txt
+Android_part/.classpath
+Android_part/.project
+Android_part/.settings
